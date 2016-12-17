@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        if(mFirebaseAuth.getCurrentUser().isAnonymous()){
+        if(mFirebaseAuth.getCurrentUser() != null && mFirebaseAuth.getCurrentUser().isAnonymous()){
             inflater.inflate(R.menu.anonymous_main_menu, menu);
         }else{
             inflater.inflate(R.menu.main_menu, menu);
