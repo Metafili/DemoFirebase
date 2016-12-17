@@ -3,13 +3,21 @@ package com.jdroid.beevapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.appinvite.AppInvite;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -24,11 +32,29 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
+    public static class UserViewHolder extends RecyclerView.ViewHolder {
+        public TextView userTextView;
+        public TextView rolTextView;
+        public CircleImageView userImageView;
+
+        public UserViewHolder(View v) {
+            super(v);
+            userTextView = (TextView) itemView.findViewById(R.id.userTextView);
+            rolTextView = (TextView) itemView.findViewById(R.id.rolTextView);
+            userImageView = (CircleImageView) itemView.findViewById(R.id.userImageView);
+        }
+    }
+
     public static final String ANONYMOUS = "anonymous";
     private static final String TAG = "MainActivity";
+    public static final String USERS_CHILD = "users";
     private String mUsername;
     private String mPhotoUrl;
     // Firebase instance variables
@@ -37,6 +63,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private GoogleApiClient mGoogleApiClient;
 
     private static final int RC_SIGN_IN = 9001;
+
+    // Firebase instance variables
+    private DatabaseReference mFirebaseDatabaseReference;
+    private FirebaseRecyclerAdapter<User, UserViewHolder> mFirebaseAdapter;
+    private LinearLayoutManager mLinearLayoutManager;
+
+    private RecyclerView mUserRecyclerView;
+    private ProgressBar mProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +102,62 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addApi(AppInvite.API)
                 .build();
+
+        // Initialize ProgressBar and RecyclerView.
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        mUserRecyclerView = (RecyclerView) findViewById(R.id.userRecyclerView);
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager.setStackFromEnd(true);
+        mUserRecyclerView.setLayoutManager(mLinearLayoutManager);
+
+        // New child entries
+        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<User,
+                UserViewHolder>(
+                User.class,
+                R.layout.item_user,
+                UserViewHolder.class,
+                mFirebaseDatabaseReference.child(USERS_CHILD)) {
+
+            @Override
+            protected void populateViewHolder(UserViewHolder viewHolder,
+                                              User user, int position) {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                viewHolder.userTextView.setText(user.getName());
+                viewHolder.rolTextView.setText(user.getRol());
+                if (user.getPhotoUrl() == null) {
+                    viewHolder.userImageView
+                            .setImageDrawable(ContextCompat
+                                    .getDrawable(MainActivity.this,
+                                            R.drawable.ic_account_circle_black_36dp));
+                } else {
+                    Glide.with(MainActivity.this)
+                            .load(user.getPhotoUrl())
+                            .into(viewHolder.userImageView);
+                }
+            }
+        };
+
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition =
+                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the
+                // user is at the bottom of the list, scroll to the bottom
+                // of the list to show the newly added message.
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (friendlyMessageCount - 1) &&
+                                lastVisiblePosition == (positionStart - 1))) {
+                    mUserRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mUserRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mUserRecyclerView.setAdapter(mFirebaseAdapter);
     }
 
     @Override
