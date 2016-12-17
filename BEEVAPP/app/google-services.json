@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "648987312658",
+    "firebase_url": "https://demofirebase-47a7f.firebaseio.com",
+    "project_id": "demofirebase-47a7f",
+    "storage_bucket": "demofirebase-47a7f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:648987312658:android:59c1b3c100a19e8f",
+        "android_client_info": {
+          "package_name": "com.jdroid.beevapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "648987312658-30qtk1qvdnkmgq24a88699b8pdtvjrck.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGTBjBuJ_5NxxfIP-uutieBnmJbdcvQvo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
