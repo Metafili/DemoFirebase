@@ -1,6 +1,7 @@
 package com.jdroid.beevapp;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -32,8 +33,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -156,6 +161,36 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             }
         });
 
+        if(mFirebaseUser != null && !mFirebaseUser.isAnonymous()){
+            mFirebaseDatabaseReference.child(USERS_CHILD).orderByChild("uid").equalTo(mFirebaseUser.getUid()).addListenerForSingleValueEvent(
+                    new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            // Get user value
+                            User user = dataSnapshot.getValue(User.class);
+                            if(user == null){
+                                user = new User();
+                                user.setName(mFirebaseUser.getDisplayName());
+                                user.setRol("None");
+                                if(mFirebaseUser.getPhotoUrl()!=null){
+                                    user.setPhotoUrl(mFirebaseUser.getPhotoUrl().toString());
+                                }
+                                user.setUID(mFirebaseUser.getUid());
+                                mFirebaseDatabaseReference.child(USERS_CHILD).push().setValue(user);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.w(TAG, "getUser:onCancelled", databaseError.toException());
+                            // ...
+                        }
+                    });
+        }
+
+
+
+
         mUserRecyclerView.setLayoutManager(mLinearLayoutManager);
         mUserRecyclerView.setAdapter(mFirebaseAdapter);
     }
@@ -163,13 +198,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        if(mFirebaseAuth.getCurrentUser() != null && mFirebaseAuth.getCurrentUser().isAnonymous()){
+        if(mFirebaseUser != null && mFirebaseUser.isAnonymous()){
             inflater.inflate(R.menu.anonymous_main_menu, menu);
         }else{
             inflater.inflate(R.menu.main_menu, menu);
         }
         return true;
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -189,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
-    private void firebaseAuthWithGoogleFromAnopnymousUser(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogleFromAnopnymousUser(final GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGooogle:" + acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mFirebaseAuth.getCurrentUser().linkWithCredential(credential)
@@ -206,8 +242,29 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             Toast.makeText(MainActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         } else {
-                            startActivity(new Intent(MainActivity.this, MainActivity.class));
-                            finish();
+
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                    .setDisplayName(acct.getDisplayName())
+                                    .setPhotoUri(acct.getPhotoUrl())
+                                    .build();
+
+                            user.updateProfile(profileUpdates)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Log.d(TAG, "User profile updated.");
+                                                startActivity(new Intent(MainActivity.this, MainActivity.class));
+                                                finish();
+                                            }else{
+                                                Log.d(TAG, "User profile updated.");
+                                                finish();
+                                            }
+                                        }
+                                    });
+
                         }
                     }
                 });

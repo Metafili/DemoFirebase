@@ -8,6 +8,7 @@ public class User {
     private String name;
     private String rol;
     private String photoUrl;
+    private String UID;
 
     public String getName() {
         return name;
@@ -31,5 +32,13 @@ public class User {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getUID() {
+        return UID;
+    }
+
+    public void setUID(String UID) {
+        this.UID = UID;
     }
 }
