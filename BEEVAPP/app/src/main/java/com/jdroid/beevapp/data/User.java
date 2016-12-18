@@ -1,4 +1,4 @@
-package com.jdroid.beevapp;
+package com.jdroid.beevapp.data;
 
 /**
  * Created by josed on 17/12/2016.
