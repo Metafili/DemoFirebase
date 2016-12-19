@@ -23,10 +23,15 @@ var schedule = require('node-schedule');
 var Promise = require('promise');
 var escape = require('escape-html');
 
+var FCM = require('fcm-push');
+
 // TODO(DEVELOPER): Change the two placeholders below.
 // [START initialize]
 // Initialize the app with a service account, granting admin privileges
 var serviceAccount = require("./secrets.json");
+
+var serverKey = 'AAAAlxqoghI:APA91bEE1DEDVrl-fHrxmoDlWDVXAfAjZ9zkC7FZGQ60xdk7n9Yus46oeAehS_3FU99UJcEU2RTK4-atxJX2VHZ41m3KjeqJPQzVBSKKx1sGkb9y1cKaxaKTF5h9Fejy7HyFBy8XkLEHpme-2cQpwojzCY_27Tkp0w';
+var fcm = new FCM(serverKey);
 
 firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
@@ -50,6 +55,14 @@ function sendNotificationEmail(email) {
   });
 }
 
+var message = { 
+    to: '/topics/user_engage', 
+    notification : {
+        title : 'Title of the notification',
+        body : 'Body of the notification'
+    }
+};
+
 
 
 /**
@@ -59,6 +72,13 @@ function startListeners() {
   firebase.database().ref('/users').on('child_added', function(userSnapshot) {
 
     // TODO: enviar notificacion del nuevo usuario
+    fcm.send(message, function(err,response){  
+        if(err) {
+            console.log("Something has gone wrong !");
+        } else {
+            console.log("Successfully sent with resposne :",response);
+        }
+    });
 
   });
   console.log('New users notifier started...');
