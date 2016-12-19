@@ -55,14 +55,6 @@ function sendNotificationEmail(email) {
   });
 }
 
-var message = { 
-    to: '/topics/user_engage', 
-    notification : {
-        title : 'Title of the notification',
-        body : 'Body of the notification'
-    }
-};
-
 
 
 /**
@@ -71,10 +63,18 @@ var message = {
 function startListeners() {
   firebase.database().ref('/users').on('child_added', function(userSnapshot) {
 
+    var message = { 
+        to: '/topics/user_engage', 
+        notification : {
+            title : 'New user!',
+            body : userSnapshot.val().name + ' joined to BEEVAPP'
+        }
+    };
+
     // TODO: enviar notificacion del nuevo usuario
     fcm.send(message, function(err,response){  
         if(err) {
-            console.log("Something has gone wrong !");
+            console.log("Something has gone wrong !",err);
         } else {
             console.log("Successfully sent with resposne :",response);
         }
