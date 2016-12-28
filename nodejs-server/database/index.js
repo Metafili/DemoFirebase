@@ -18,10 +18,6 @@
 // [START imports]
 var firebase = require('firebase-admin');
 // [END imports]
-var nodemailer = require('nodemailer');
-var schedule = require('node-schedule');
-var Promise = require('promise');
-var escape = require('escape-html');
 
 var FCM = require('fcm-push');
 
@@ -38,24 +34,6 @@ firebase.initializeApp({
   databaseURL: 'https://demofirebase-47a7f.firebaseio.com'
 });
 // [END initialize]
-
-
-/**
- * Send the new star notification email to the given email.
- */
-function sendNotificationEmail(email) {
-  var mailOptions = {
-    from: '"Firebase Database Quickstart" <noreply@firebase.com>',
-    to: email,
-    subject: 'New star!',
-    text: 'One of your posts has received a new star!'
-  };
-  return mailTransport.sendMail(mailOptions).then(function() {
-    console.log('New star email notification sent to: ' + email);
-  });
-}
-
-
 
 /**
  * Keep the likes count updated and send email notifications for new likes.

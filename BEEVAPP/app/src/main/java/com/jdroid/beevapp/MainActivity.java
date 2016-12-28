@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                                 startActivity(new Intent(MainActivity.this, MainActivity.class));
                                                 finish();
                                             }else{
-                                                Log.d(TAG, "User profile updated.");
+                                                Log.d(TAG, "User profile updated error.");
                                                 finish();
                                             }
                                         }
@@ -296,4 +296,5 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show();
 
     }
+    
 }
